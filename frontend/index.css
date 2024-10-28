@@ -1,0 +1,101 @@
+:root {
+	--border-color: #abc
+}
+
+.flex {
+	display: flex;
+}
+
+.row {
+	flex-direction: column;
+}
+
+.column {
+	flex-direction: row;
+}
+
+.grow {
+	flex-grow: 1;
+}
+
+.gap {
+	gap: 5px;
+}
+
+.padding {
+	padding: 4px 8px;
+}
+
+.error {
+	color: orangered;
+}
+
+.accordion {
+	border: 1px solid var(--border-color);
+	border-radius: 5px;
+	overflow: hidden;
+
+	display: flex;
+	flex-direction: column;
+	align-self: stretch;
+	align-items: stretch;
+}
+
+.accordion-header,
+.accordion-body,
+.accordion-header .title,
+.accordion-header .chevron {
+	display: flex;
+}
+
+.accordion-header {
+	cursor: pointer;
+
+	flex-grow: 1;
+	flex-shrink: 0;
+	overflow: hidden;
+	flex-direction: row;
+}
+
+.accordion-header .title {
+	flex-grow: 1;
+	flex-shrink: 0;
+	overflow: hidden;
+	flex-direction: row;
+}
+
+.accordion-header .chevron {
+	flex-shrink: 0;
+	flex-grow: 0;
+	overflow: hidden;
+}
+
+.accordion-body {
+	border-top: 1px solid var(--border-color);
+
+	flex-grow: 1;
+	flex-shrink: 1;
+	overflow: auto;
+	flex-direction: column;
+}
+
+.accordion-header .chevron {
+	border-left: 1px solid var(--border-color);
+}
+
+.hidden {
+	display: none !important;
+}
+
+.list {}
+
+.list .item:nth-child(even) {
+	background-color: rgba(0, 0, 0, .05);
+	border-radius: 10px;
+}
+
+.ellipsis {
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
