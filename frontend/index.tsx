@@ -14,7 +14,7 @@ const settings: Settings = {
 	autoRename: true,
 };
 
-function HelloWorldTypescriptApp() {
+function DropboxFileArchiver() {
 	const [selectedAppId, setSelectedAppId] = useState<SelectOptionValue>(null);
 
 	return (
@@ -30,4 +30,4 @@ function HelloWorldTypescriptApp() {
 	);
 }
 
-initializeBlock(() => <HelloWorldTypescriptApp />);
+initializeBlock(() => <DropboxFileArchiver />);
