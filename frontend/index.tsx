@@ -8,7 +8,7 @@ import { Settings, SettingsProvider } from "./contexts/Settings";
 import "./index.css";
 
 const settings: Settings = {
-	rootPath: "/",
+	rootPath: "/Clio",
 	archiveFilesOlderThan: 5 * 365 * 24 * 60 * 60 * 1000, // 5 years
 	archiveFolder: "/Archived",
 	autoRename: true,
