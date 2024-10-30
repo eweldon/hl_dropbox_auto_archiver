@@ -8,7 +8,7 @@ import useListAll from "./useListAll";
 import groupArray from "../utils/groupArray";
 import { Entry } from "../types/Entry";
 
-function useArchiver() {
+function useArchiver(maxFiles?: number) {
 	const isSearchingRef = useRef(false);
 	const [isSearching, setIsSearching] = useState(isSearchingRef.current);
 
@@ -42,29 +42,28 @@ function useArchiver() {
 			const beforeDate = new Date(Date.now() - archiveFilesOlderThan);
 			const beforeQuery = `before:${getDateString(beforeDate)}`;
 
+			const newFoundFiles = [];
+			const updateNewFoundFiles = () => {
+				setFilesFound(newFoundFiles.slice(0, maxFiles));
+			};
+
 			const progressCallback = (chunk: Entry[]) => {
-				setFilesFound((prev) => {
-					const newFoundFiles = [...prev];
+				for (const entry of chunk) {
+					const pathToEntry = join(entry.path);
 
-					for (const entry of chunk) {
-						const pathToEntry = join(entry.path);
+					if (!pathToEntry || pathToEntry.startsWith(cleanArchiveFolder))
+						continue;
 
-						if (!pathToEntry || pathToEntry.startsWith(cleanArchiveFolder))
-							continue;
+					if (entry.type === "file") newFoundFiles.push(entry);
+				}
 
-						if (entry.type === "file") newFoundFiles.push(entry);
-					}
-
-					return newFoundFiles;
-				});
+				updateNewFoundFiles();
 			};
 
 			const rootEntries = await listAll({
 				path: cleanRootPath || "",
 				recursive: false,
 			});
-
-			console.log("rootEntries:", rootEntries);
 
 			const { rootFiles, folderQueue } = groupArray(
 				rootEntries,
@@ -74,17 +73,20 @@ function useArchiver() {
 
 			progressCallback(rootFiles);
 
-			console.log("folderQueue:", folderQueue);
-
 			for (const folder of folderQueue) {
-				console.log("root folder:", folder);
-
 				await searchAll({
 					path: join(folder.path),
 					query: beforeQuery,
 					progressCallback,
+					maxFiles,
 				});
+
+				if (newFoundFiles.length >= maxFiles) {
+					break;
+				}
 			}
+
+			updateNewFoundFiles();
 		} catch (error: Error) {
 			console.error(error);
 			setError(error.message);
@@ -92,7 +94,14 @@ function useArchiver() {
 
 		isSearchingRef.current = false;
 		setIsSearching(false);
-	}, [archiveFilesOlderThan, archiveFolder, listAll, rootPath, searchAll]);
+	}, [
+		archiveFilesOlderThan,
+		archiveFolder,
+		listAll,
+		maxFiles,
+		rootPath,
+		searchAll,
+	]);
 
 	const transfer = useCallback(async () => {
 		if (isTransferringRef.current) return;

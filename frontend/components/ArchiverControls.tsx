@@ -1,8 +1,8 @@
-import React, { FC } from "react";
+import React, { FC, useCallback, useState } from "react";
 import useArchiver from "../hooks/useArchiver";
 import Loading from "./Loading";
 import { useDropboxAPI } from "../contexts/DropboxAPI";
-import { Button, Label } from "@airtable/blocks/ui";
+import { Button, Input, Label } from "@airtable/blocks/ui";
 import Error from "./Error";
 import Accordion from "./Accordion";
 import FileTree from "./FileTree";
@@ -13,6 +13,22 @@ interface Props {
 
 const ArchiverControls: FC<Props> = ({ appId }) => {
 	const dropboxAPI = useDropboxAPI();
+	const [maxFiles, setMaxFiles] = useState(10);
+
+	const onInputChange = useCallback(
+		(e: React.ChangeEvent<HTMLInputElement>) => {
+			if (e.target.value?.trim() === "") {
+				setMaxFiles(0);
+				return;
+			}
+
+			const number = parseInt(e.target.value);
+
+			if (!isNaN(number)) setMaxFiles(number);
+		},
+		[]
+	);
+
 	const {
 		search,
 		isSearching,
@@ -23,7 +39,7 @@ const ArchiverControls: FC<Props> = ({ appId }) => {
 		filesTransferred,
 
 		error,
-	} = useArchiver();
+	} = useArchiver(maxFiles);
 
 	if (error) return <Error message={error} />;
 
@@ -35,6 +51,11 @@ const ArchiverControls: FC<Props> = ({ appId }) => {
 	return (
 		<div className="flex row gap padding">
 			<Label>Archiver:</Label>
+
+			<div className="flex column gap align-center">
+				<Label className="">File limit:</Label>
+				<Input value={maxFiles} onChange={onInputChange} type="number" />
+			</div>
 
 			<Button disabled={!canSearch} onClick={search}>
 				{isSearching ? (

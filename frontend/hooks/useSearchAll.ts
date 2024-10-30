@@ -3,13 +3,13 @@ import { useDropboxAPI } from "../contexts/DropboxAPI";
 import wait from "../utils/wait";
 import { Entry } from "../types/Entry";
 import { MatchEntry } from "../types/MatchEntry";
-
-const SEARCH_LIMIT = 10e3;
+import { SEARCH_LIMIT } from "../constants/search-limit";
 
 interface SearchOptions {
 	path: string;
 	query: string;
 	foldersOnly?: boolean;
+	maxFiles?: number;
 	progressCallback?: (chunk: Entry[]) => void;
 }
 
@@ -21,8 +21,12 @@ function useSearchAll() {
 			path,
 			query,
 			foldersOnly,
+			maxFiles,
 			progressCallback,
 		}: SearchOptions): Entry[] => {
+			maxFiles = Math.min(maxFiles ?? SEARCH_LIMIT, SEARCH_LIMIT);
+			if (maxFiles <= 0) maxFiles = SEARCH_LIMIT;
+
 			const initialSearch = await dropboxAPI.searchFiles(
 				path,
 				query,
@@ -35,7 +39,7 @@ function useSearchAll() {
 
 			progressCallback?.(Array.from(entries));
 
-			while (hasMore && entries.length < SEARCH_LIMIT) {
+			while (hasMore && entries.length < maxFiles) {
 				await wait(1e3);
 				const response = await dropboxAPI.continueSearch(cursor, 3);
 
