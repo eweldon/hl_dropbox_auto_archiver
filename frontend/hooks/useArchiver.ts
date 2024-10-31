@@ -49,12 +49,14 @@ function useArchiver(maxFiles?: number) {
 
 			const progressCallback = (chunk: Entry[]) => {
 				for (const entry of chunk) {
+					if (entry.type !== "file") continue;
+
 					const pathToEntry = join(entry.path);
+					if (!pathToEntry) continue;
+					if (pathToEntry.startsWith(cleanArchiveFolder)) continue;
+					if (!pathToEntry.startsWith(cleanRootPath)) continue;
 
-					if (!pathToEntry || pathToEntry.startsWith(cleanArchiveFolder))
-						continue;
-
-					if (entry.type === "file") newFoundFiles.push(entry);
+					newFoundFiles.push(entry);
 				}
 
 				updateNewFoundFiles();
