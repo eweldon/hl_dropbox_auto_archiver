@@ -62,13 +62,9 @@ class DropboxAPI {
 			expirationTimestamp
 		);
 
-		if (
-			!accessToken?.trim() ||
-			!expirationTimestamp ||
-			expirationTimestamp < Date.now()
-		) {
+		if (!dropboxAPI.isAccessTokenValid) {
 			const { accessToken, expirationTimestamp } =
-				await dropboxAPI.refreshAccessToken();
+				await dropboxAPI.getValidAccessToken();
 
 			await table.updateRecordAsync(recordId, {
 				[fieldIds.accessToken]: accessToken,
@@ -86,6 +82,22 @@ class DropboxAPI {
 		private accessToken: string,
 		private expirationTimestamp: number
 	) {}
+
+	get isAccessTokenValid() {
+		return (
+			this.accessToken?.trim() &&
+			this.expirationTimestamp &&
+			this.expirationTimestamp > Date.now()
+		);
+	}
+
+	async getValidAccessToken() {
+		if (!this.isAccessTokenValid) {
+			await this.refreshAccessToken();
+		}
+
+		return this.accessToken;
+	}
 
 	async refreshAccessToken() {
 		const params = new URLSearchParams({
@@ -142,7 +154,7 @@ class DropboxAPI {
 		const response = await fetch(DropboxAPI.Endpoints.search, {
 			method: "POST",
 			headers: {
-				Authorization: `Bearer ${this.accessToken}`,
+				Authorization: `Bearer ${await this.getValidAccessToken()}`,
 				"Content-Type": "application/json",
 			},
 			body: JSON.stringify(params),
@@ -168,7 +180,7 @@ class DropboxAPI {
 		const response = await fetch(DropboxAPI.Endpoints.searchContinue, {
 			method: "POST",
 			headers: {
-				Authorization: `Bearer ${this.accessToken}`,
+				Authorization: `Bearer ${await this.getValidAccessToken()}`,
 				"Content-Type": "application/json",
 			},
 			body: JSON.stringify(params),
@@ -207,7 +219,7 @@ class DropboxAPI {
 		const response = await fetch(DropboxAPI.Endpoints.listFolder, {
 			method: "POST",
 			headers: {
-				Authorization: `Bearer ${this.accessToken}`,
+				Authorization: `Bearer ${await this.getValidAccessToken()}`,
 				"Content-Type": "application/json",
 			},
 			body: JSON.stringify(params),
@@ -233,7 +245,7 @@ class DropboxAPI {
 		const response = await fetch(DropboxAPI.Endpoints.listFolderContinue, {
 			method: "POST",
 			headers: {
-				Authorization: `Bearer ${this.accessToken}`,
+				Authorization: `Bearer ${await this.getValidAccessToken()}`,
 				"Content-Type": "application/json",
 			},
 			body: JSON.stringify(params),
@@ -286,7 +298,7 @@ class DropboxAPI {
 		const response = await fetch(DropboxAPI.Endpoints.copyBatch, {
 			method: "POST",
 			headers: {
-				Authorization: `Bearer ${this.accessToken}`,
+				Authorization: `Bearer ${await this.getValidAccessToken()}`,
 				"Content-Type": "application/json",
 			},
 			body: JSON.stringify(params),
@@ -309,7 +321,7 @@ class DropboxAPI {
 		const response = await fetch(DropboxAPI.Endpoints.copyBatchCheck, {
 			method: "POST",
 			headers: {
-				Authorization: `Bearer ${this.accessToken}`,
+				Authorization: `Bearer ${await this.getValidAccessToken()}`,
 				"Content-Type": "application/json",
 			},
 			body: JSON.stringify(params),
@@ -352,7 +364,7 @@ class DropboxAPI {
 		const response = await fetch(DropboxAPI.Endpoints.moveBatch, {
 			method: "POST",
 			headers: {
-				Authorization: `Bearer ${this.accessToken}`,
+				Authorization: `Bearer ${await this.getValidAccessToken()}`,
 				"Content-Type": "application/json",
 			},
 			body: JSON.stringify(params),
@@ -375,7 +387,7 @@ class DropboxAPI {
 		const response = await fetch(DropboxAPI.Endpoints.moveBatchCheck, {
 			method: "POST",
 			headers: {
-				Authorization: `Bearer ${this.accessToken}`,
+				Authorization: `Bearer ${await this.getValidAccessToken()}`,
 				"Content-Type": "application/json",
 			},
 			body: JSON.stringify(params),
