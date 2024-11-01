@@ -13,21 +13,6 @@ interface Props {
 
 const ArchiverControls: FC<Props> = ({ appId }) => {
 	const dropboxAPI = useDropboxAPI();
-	const [maxFiles, setMaxFiles] = useState(10);
-
-	const onInputChange = useCallback(
-		(e: React.ChangeEvent<HTMLInputElement>) => {
-			if (e.target.value?.trim() === "") {
-				setMaxFiles(0);
-				return;
-			}
-
-			const number = parseInt(e.target.value);
-
-			if (!isNaN(number)) setMaxFiles(number);
-		},
-		[]
-	);
 
 	const {
 		search,
@@ -43,7 +28,12 @@ const ArchiverControls: FC<Props> = ({ appId }) => {
 
 	if (error) return <Error message={error} />;
 
-	if (!dropboxAPI) return "App is not selected";
+	if (!appId) return <Label textColor="orangered">App is not selected</Label>;
+
+	if (!dropboxAPI)
+		return (
+			<Label textColor="orangered">Failed to initialize Dropbox API</Label>
+		);
 
 	const canSearch = appId && !isSearching;
 	const canTransfer = appId && filesFound.length > 0;

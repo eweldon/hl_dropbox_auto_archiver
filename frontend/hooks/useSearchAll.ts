@@ -14,7 +14,7 @@ interface SearchOptions {
 }
 
 function useSearchAll() {
-	const dropboxAPI = useDropboxAPI();
+	const { dropboxAPI } = useDropboxAPI();
 
 	const searchAll = useCallback(
 		async ({

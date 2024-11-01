@@ -13,13 +13,13 @@ import { Label } from "@airtable/blocks/ui";
 
 const DROPBOX_AUTH_TABLE_ID = "tblLsaz5SX620eWOo";
 
-const DropboxAPIContext = createContext<{ dropboxAPI: DropboxAPI | null }>({
-	dropboxAPI: null,
-});
-
-interface Props extends PropsWithChildren {
-	appId: string | null;
+interface ContextValue {
+	loading: boolean;
+	error: string;
+	dropboxAPI: DropboxAPI | null;
 }
+
+const DropboxAPIContext = createContext<ContextValue>();
 
 export const DropboxAPIProvider: FC<Props> = ({ appId, children }) => {
 	const [loading, setLoading] = useState(false);
@@ -54,18 +54,13 @@ export const DropboxAPIProvider: FC<Props> = ({ appId, children }) => {
 		initDropboxAPI();
 	}, [appId]);
 
-	const wrappedDropboxAPI = useMemo(() => ({ dropboxAPI }), [dropboxAPI]);
-
-	if (loading) {
-		return <Loading />;
-	}
-
-	if (error) {
-		return <Label>{`Could not retrieve app's token`}</Label>;
-	}
+	const contextValue = useMemo(
+		(): ContextValue => ({ loading, error, dropboxAPI }),
+		[dropboxAPI, error, loading]
+	);
 
 	return (
-		<DropboxAPIContext.Provider value={wrappedDropboxAPI}>
+		<DropboxAPIContext.Provider value={contextValue}>
 			{children}
 		</DropboxAPIContext.Provider>
 	);
@@ -78,5 +73,5 @@ export const useDropboxAPI = () => {
 		throw new Error("useDropboxAPI must be used within an DropboxAPIProvider");
 	}
 
-	return context.dropboxAPI;
+	return context;
 };

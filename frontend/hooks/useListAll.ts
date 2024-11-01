@@ -12,7 +12,7 @@ interface ListFolderOptions {
 }
 
 function useListAll() {
-	const dropboxAPI = useDropboxAPI();
+	const { dropboxAPI } = useDropboxAPI();
 
 	const listFolderAll = useCallback(
 		async ({

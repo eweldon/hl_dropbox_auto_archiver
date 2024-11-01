@@ -16,7 +16,7 @@ interface TransferOptions<Check extends boolean> {
 }
 
 function useFileTransferrer() {
-	const dropboxAPI = useDropboxAPI();
+	const { dropboxAPI } = useDropboxAPI();
 
 	const transferFiles = useCallback(
 		function <Check extends boolean>({
