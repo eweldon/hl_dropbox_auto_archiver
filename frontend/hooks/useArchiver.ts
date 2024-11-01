@@ -75,18 +75,25 @@ function useArchiver(maxFiles?: number) {
 
 			progressCallback(rootFiles);
 
-			for (const folder of folderQueue) {
-				await searchAll({
-					path: join(folder.path),
-					query: beforeQuery,
-					progressCallback,
-					maxFiles,
-				});
+			await batchProcess(
+				folderQueue,
+				async (folder, stop) => {
+					await searchAll({
+						path: join(folder.path),
+						query: beforeQuery,
+						progressCallback,
+						maxFiles,
+					});
 
-				if (newFoundFiles.length >= maxFiles) {
-					break;
-				}
-			}
+					if (newFoundFiles.length >= maxFiles) {
+						stop();
+					}
+				},
+				5,
+				0.1e3
+			);
+
+			console.log("batch processing finished");
 
 			updateNewFoundFiles();
 		} catch (error: Error) {
