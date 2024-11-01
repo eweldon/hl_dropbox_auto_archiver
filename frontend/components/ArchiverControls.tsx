@@ -37,18 +37,10 @@ const ArchiverControls: FC<Props> = () => {
 	const canTransfer = appId && filesFound.length > 0;
 
 	return (
-		<div className="flex row gap padding">
-			<Label>Archiver:</Label>
-
-			<Button disabled={!canSearch} onClick={search}>
-				{isSearching ? (
-					<Loading
-						text={`Searching "${config.rootPath}" for files to archive`}
-					/>
-				) : (
-					`Search "${config.rootPath}" for files to archive`
-				)}
-			</Button>
+			<div className="flex column gap justify-between align-center">
+				<Label>Archiver</Label>
+				<ConfigMenu disabled={isSearching || isTransferring} />
+			</div>
 
 			<Accordion title={<Label>Files found: {filesFound.length}</Label>}>
 				<FileTree files={filesFound} />

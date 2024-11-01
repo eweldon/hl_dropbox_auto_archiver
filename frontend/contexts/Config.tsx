@@ -12,7 +12,6 @@ import React, {
 } from "react";
 import { Config, ConfigContext } from "../types/Config";
 import { globalConfig } from "@airtable/blocks";
-import isEqual from "lodash/isEqual";
 
 const configContext = createContext<ConfigContext>();
 
@@ -35,7 +34,6 @@ function saveConfig(appId: string, newConfig: Config) {
 export const ConfigProvider: FC<PropsWithChildren> = ({ children }) => {
 	const [appId, setAppId] = useState<string | null>(null);
 	const [config, setConfig] = useState(defaultConfig);
-	const [originalConfig, setOriginalConfig] = useState(config);
 
 	useEffect(() => {
 		if (!appId) return;
@@ -43,31 +41,22 @@ export const ConfigProvider: FC<PropsWithChildren> = ({ children }) => {
 		const savedConfig = getConfig(appId);
 		const newConfig = { ...defaultConfig, ...savedConfig };
 
-		setOriginalConfig(newConfig);
 		setConfig(newConfig);
 	}, [appId]);
-
-	const hasChanges = useMemo(() => {
-		return !isEqual(config, originalConfig);
-	}, [config, originalConfig]);
 
 	const updateConfig = useCallback<Dispatch<SetStateAction<Config>>>(
 		(newConfig) => {
 			setConfig((prev) => {
-				return typeof newConfig === "function" ? newConfig(prev) : newConfig;
+				newConfig =
+					typeof newConfig === "function" ? newConfig(prev) : newConfig;
+
+				saveConfig(appId, newConfig);
+
+				return newConfig;
 			});
 		},
-		[]
+		[appId]
 	);
-
-	const saveChanges = useCallback(() => {
-		saveConfig(appId, config);
-		setOriginalConfig(config);
-	}, [appId, config]);
-
-	const cancelChanges = useCallback(() => {
-		setConfig(originalConfig);
-	}, [originalConfig]);
 
 	const contextValue = useMemo(
 		(): ConfigContext => ({
@@ -76,12 +65,8 @@ export const ConfigProvider: FC<PropsWithChildren> = ({ children }) => {
 
 			config,
 			updateConfig,
-
-			hasChanges,
-			saveChanges,
-			cancelChanges,
 		}),
-		[appId, cancelChanges, config, hasChanges, saveChanges, updateConfig]
+		[appId, config, updateConfig]
 	);
 
 	return (

@@ -2,28 +2,32 @@ import React, { FC, useCallback } from "react";
 import { Label, Tooltip } from "@airtable/blocks/ui";
 import { FieldInputValueTypeMap, FieldMeta } from "../../types";
 import { FIELD_INPUTS } from "./constants";
-import { useConfig } from "../../../../contexts/Config";
+import { Config } from "../../../../types/Config";
+import { OnChange } from "../../../../types/OnChange";
 
 interface ConfigFieldProps {
+	config: Config;
+	setConfig: OnChange<Config>;
 	fieldKey: string;
 	meta: FieldMeta;
 }
 
 const ConfigField: FC<ConfigFieldProps> = ({
+	config,
+	setConfig,
 	fieldKey,
 	meta: { title, description, input },
 }) => {
 	const FieldInput = FIELD_INPUTS[input.type];
-	const { config, updateConfig } = useConfig();
 
 	const onFieldChange = useCallback(
 		(newValue: FieldInputValueTypeMap[typeof input.type]) => {
-			updateConfig((prev) => ({
-				...prev,
+			setConfig({
+				...config,
 				[fieldKey]: newValue,
-			}));
+			});
 		},
-		[fieldKey, input, updateConfig]
+		[config, fieldKey, input, setConfig]
 	);
 
 	if (!FieldInput) {

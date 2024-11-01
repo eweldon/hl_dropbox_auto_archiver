@@ -14,8 +14,4 @@ export interface ConfigContext {
 
 	config: Config;
 	updateConfig: Dispatch<SetStateAction<Config>>;
-
-	hasChanges: boolean;
-	saveChanges: () => void;
-	cancelChanges: () => void;
 }
