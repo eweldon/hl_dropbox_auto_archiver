@@ -15,7 +15,11 @@ function useListAll() {
 	const dropboxAPI = useDropboxAPI();
 
 	const listFolderAll = useCallback(
-		async ({ path, recursive, progressCallback }: ListFolderOptions) => {
+		async ({
+			path,
+			recursive,
+			progressCallback,
+		}: ListFolderOptions): Promise<Entry[]> => {
 			const initialListFolderResponse = await dropboxAPI.listFolderFiles({
 				path,
 				recursive,
@@ -48,12 +52,28 @@ function useListAll() {
 				entries.push(...newEntries);
 			}
 
-			return entries.map(({ id, ".tag": type, name, path_display: path }) => ({
-				id,
-				type,
-				name,
-				path,
-			}));
+			console.log("entries:", entries);
+
+			return entries.map((entry): Entry => {
+				const { id, ".tag": type, name, path_display: path } = entry;
+
+				if (entry[".tag"] === "file") {
+					return {
+						id,
+						type,
+						name,
+						path,
+						modifiedAt: new Date(entry.server_modified),
+					};
+				}
+
+				return {
+					id,
+					type,
+					name,
+					path,
+				};
+			});
 		},
 		[dropboxAPI]
 	);

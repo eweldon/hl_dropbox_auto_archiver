@@ -50,6 +50,7 @@ function useArchiver(maxFiles?: number) {
 			const progressCallback = (chunk: Entry[]) => {
 				for (const entry of chunk) {
 					if (entry.type !== "file") continue;
+					if (entry.modifiedAt > beforeDate) continue;
 
 					const pathToEntry = join(entry.path);
 					if (!pathToEntry) continue;

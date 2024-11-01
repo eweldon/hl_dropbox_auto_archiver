@@ -3,6 +3,7 @@ interface File {
 	type: "file";
 	name: string;
 	path: string;
+	modifiedAt: Date;
 }
 
 interface Folder {
