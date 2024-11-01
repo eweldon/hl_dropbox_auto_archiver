@@ -1,15 +1,38 @@
-import { useCallback, useRef, useState } from "react";
-import useSearchAll from "./useSearchAll";
-import useFileTransferrer from "./useFileMover";
+import React, {
+	createContext,
+	FC,
+	PropsWithChildren,
+	useCallback,
+	useContext,
+	useMemo,
+	useRef,
+	useState,
+} from "react";
+import useSearchAll from "../hooks/useSearchAll";
+import useFileTransferrer from "../hooks/useFileMover";
 import { join } from "../utils/join";
 import getDateString from "../utils/getDateString";
-import useListAll from "./useListAll";
+import useListAll from "../hooks/useListAll";
 import groupArray from "../utils/groupArray";
 import { Entry } from "../types/Entry";
 import batchProcess from "../utils/batchProcess";
-import { useConfig } from "../contexts/Config";
+import { useConfig } from "./Config";
 
-function useArchiver() {
+interface ArchiverContextValue {
+	search: () => void;
+	isSearching: boolean;
+	filesFound: Entry[];
+
+	transfer: () => void;
+	isTransferring: boolean;
+	filesTransferred: Entry[];
+
+	error: string;
+}
+
+const archiverContext = createContext<ArchiverContextValue>();
+
+export const ArchiverProvider: FC<PropsWithChildren> = ({ children }) => {
 	const {
 		rootPath,
 		archiveFilesOlderThan,
@@ -150,17 +173,42 @@ function useArchiver() {
 		setIsTransferring(false);
 	}, [archiveFolder, autoRename, filesFound, transferFiles]);
 
-	return {
-		search,
-		isSearching,
-		filesFound,
+	const contextValue = useMemo(
+		() => ({
+			search,
+			isSearching,
+			filesFound,
 
-		transfer,
-		isTransferring,
-		filesTransferred,
+			transfer,
+			isTransferring,
+			filesTransferred,
 
-		error,
-	};
+			error,
+		}),
+		[
+			error,
+			filesFound,
+			filesTransferred,
+			isSearching,
+			isTransferring,
+			search,
+			transfer,
+		]
+	);
+
+	return (
+		<archiverContext.Provider value={contextValue}>
+			{children}
+		</archiverContext.Provider>
+	);
+};
+
+export function useArchiver() {
+	const context = useContext(archiverContext);
+
+	if (!context) {
+		throw new Error("useArchiver must be used within an ArchiverProvider");
+	}
+
+	return context;
 }
-
-export default useArchiver;

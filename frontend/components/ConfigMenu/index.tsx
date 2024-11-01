@@ -1,16 +1,31 @@
 import { Box, Button, Dialog, Heading, Icon } from "@airtable/blocks/ui";
-import React, { FC, Fragment, useCallback, useMemo, useState } from "react";
+import React, {
+	FC,
+	Fragment,
+	useCallback,
+	useEffect,
+	useMemo,
+	useState,
+} from "react";
 import AppSelect from "../AppSelect";
 import ConfigField from "./components/ConfigField";
 import { FIELDS_META } from "./components/ConfigField/constants";
 import { useConfig } from "../../contexts/Config";
 
-const ConfigMenu: FC = () => {
+interface Props {
+	disabled?: boolean;
+}
+
+const ConfigMenu: FC<Props> = ({ disabled }) => {
 	const { appId, hasChanges, saveChanges, cancelChanges } = useConfig();
 
 	const [isOpen, setIsOpen] = useState(false);
 	const open = useCallback(() => setIsOpen(true), []);
 	const close = useCallback(() => setIsOpen(false), []);
+
+	useEffect(() => {
+		if (isOpen && disabled) close();
+	}, [disabled, isOpen, close]);
 
 	const fields = useMemo(
 		() =>
@@ -35,7 +50,7 @@ const ConfigMenu: FC = () => {
 
 	return (
 		<Fragment>
-			<Button onClick={open}>
+			<Button disabled={disabled} onClick={open}>
 				<Icon name="cog" size={16} />
 			</Button>
 

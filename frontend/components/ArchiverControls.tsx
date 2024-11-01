@@ -1,5 +1,5 @@
 import React, { FC } from "react";
-import useArchiver from "../hooks/useArchiver";
+import { useArchiver } from "../contexts/Archiver";
 import Loading from "./Loading";
 import { useDropboxAPI } from "../contexts/DropboxAPI";
 import { Button, Label } from "@airtable/blocks/ui";
@@ -9,7 +9,7 @@ import FileTree from "./FileTree";
 import { useConfig } from "../contexts/Config";
 
 const ArchiverControls: FC<Props> = () => {
-	const { appId } = useConfig();
+	const { appId, config } = useConfig();
 	const { dropboxAPI } = useDropboxAPI();
 
 	const {
@@ -42,23 +42,23 @@ const ArchiverControls: FC<Props> = () => {
 
 			<Button disabled={!canSearch} onClick={search}>
 				{isSearching ? (
-					<Loading text="Searching for files to archive" />
+					<Loading
+						text={`Searching "${config.rootPath}" for files to archive`}
+					/>
 				) : (
-					"Search for files to archive"
+					`Search "${config.rootPath}" for files to archive`
 				)}
 			</Button>
 
-			<Accordion
-				title={<Label>Files to archive found: {filesFound.length}</Label>}
-			>
+			<Accordion title={<Label>Files found: {filesFound.length}</Label>}>
 				<FileTree files={filesFound} />
 			</Accordion>
 
 			<Button disabled={!canTransfer} onClick={transfer}>
 				{isTransferring ? (
-					<Loading text="Transferring files" />
+					<Loading text={`Transferring files to "${config.archiveFolder}"`} />
 				) : (
-					"Transfer found files to archive"
+					`Transfer found files to "${config.archiveFolder}"`
 				)}
 			</Button>
 

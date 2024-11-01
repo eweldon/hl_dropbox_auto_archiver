@@ -8,10 +8,12 @@ import ConfigMenu from "./components/ConfigMenu";
 import Loading from "./components/Loading";
 import Error from "./components/Error";
 import "./index.css";
+import { ArchiverProvider, useArchiver } from "./contexts/Archiver";
 
 function Main() {
 	const { appId } = useConfig();
 	const { loading, error } = useDropboxAPI();
+	const { isSearching, isTransferring } = useArchiver();
 
 	const archiverControls = useMemo(() => {
 		if (loading) {
@@ -31,7 +33,8 @@ function Main() {
 				<div className="grow">
 					<AppSelect />
 				</div>
-				<ConfigMenu />
+
+				<ConfigMenu disabled={isSearching || isTransferring} />
 			</div>
 
 			{archiverControls}
@@ -42,7 +45,9 @@ function Main() {
 initializeBlock(() => (
 	<ConfigProvider>
 		<DropboxAPIProvider>
-			<Main />
+			<ArchiverProvider>
+				<Main />
+			</ArchiverProvider>
 		</DropboxAPIProvider>
 	</ConfigProvider>
 ));
