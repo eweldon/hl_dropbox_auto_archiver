@@ -64,7 +64,7 @@ function useArchiver(maxFiles?: number) {
 			};
 
 			const rootEntries = await listAll({
-				path: cleanRootPath || "",
+				path: "",
 				recursive: false,
 			});
 
