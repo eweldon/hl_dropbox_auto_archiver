@@ -1,3 +1,4 @@
+import { Label } from "@airtable/blocks/ui";
 import React, { FC, useEffect, useState } from "react";
 
 interface Props {
@@ -18,10 +19,10 @@ const Loading: FC<Props> = ({ text = "Loading" }) => {
 	}, []);
 
 	return (
-		<div>
+		<Label>
 			{text}
 			{".".repeat(dotCount)}
-		</div>
+		</Label>
 	);
 };
 

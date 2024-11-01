@@ -1,5 +1,4 @@
 import { useCallback, useRef, useState } from "react";
-import { useSettings } from "../contexts/Settings";
 import useSearchAll from "./useSearchAll";
 import useFileTransferrer from "./useFileMover";
 import { join } from "../utils/join";
@@ -7,8 +6,18 @@ import getDateString from "../utils/getDateString";
 import useListAll from "./useListAll";
 import groupArray from "../utils/groupArray";
 import { Entry } from "../types/Entry";
+import batchProcess from "../utils/batchProcess";
+import { useConfig } from "../contexts/Config";
 
-function useArchiver(maxFiles?: number) {
+function useArchiver() {
+	const {
+		rootPath,
+		archiveFilesOlderThan,
+		archiveFolder,
+		autoRename,
+		maxFiles,
+	} = useConfig().config;
+
 	const isSearchingRef = useRef(false);
 	const [isSearching, setIsSearching] = useState(isSearchingRef.current);
 
@@ -20,9 +29,6 @@ function useArchiver(maxFiles?: number) {
 	const [filesFound, setFilesFound] = useState<Entry[]>([]);
 	const [filesTransferred, setTransferredFiles] = useState<Entry[]>([]);
 	const [error, setError] = useState("");
-
-	const { rootPath, archiveFilesOlderThan, archiveFolder, autoRename } =
-		useSettings();
 
 	const listAll = useListAll();
 	const searchAll = useSearchAll();

@@ -1,33 +1,48 @@
-import { SelectOptionValue } from "@airtable/blocks/dist/types/src/ui/select_and_select_buttons_helpers";
 import { initializeBlock } from "@airtable/blocks/ui";
-import React, { useState } from "react";
+import React, { useMemo } from "react";
 import AppSelect from "./components/AppSelect";
 import ArchiverControls from "./components/ArchiverControls";
-import { DropboxAPIProvider } from "./contexts/DropboxAPI";
-import { Settings, SettingsProvider } from "./contexts/Settings";
+import { DropboxAPIProvider, useDropboxAPI } from "./contexts/DropboxAPI";
+import { ConfigProvider, useConfig } from "./contexts/Config";
+import ConfigMenu from "./components/ConfigMenu";
+import Loading from "./components/Loading";
+import Error from "./components/Error";
 import "./index.css";
 
-const settings: Settings = {
-	rootPath: "/Clio",
-	archiveFilesOlderThan: 5 * 365 * 24 * 60 * 60 * 1000, // 5 years
-	archiveFolder: "/Archived",
-	autoRename: true,
-};
+function Main() {
+	const { appId } = useConfig();
+	const { loading, error } = useDropboxAPI();
 
-function DropboxFileArchiver() {
-	const [selectedAppId, setSelectedAppId] = useState<SelectOptionValue>(null);
+	const archiverControls = useMemo(() => {
+		if (loading) {
+			return <Loading />;
+		}
+
+		if (error) {
+			return <Error message="Could not retrieve token of this app" />;
+		}
+
+		return appId && <ArchiverControls />;
+	}, [appId, error, loading]);
 
 	return (
-		<div className="flex row gap padding">
-			<AppSelect value={selectedAppId} onChange={setSelectedAppId} />
+		<div className="flex row gap padding align-stretch">
+			<div className="grow flex column gap align-end">
+				<div className="grow">
+					<AppSelect />
+				</div>
+				<ConfigMenu />
+			</div>
 
-			<SettingsProvider settings={settings}>
-				<DropboxAPIProvider appId={selectedAppId}>
-					<ArchiverControls appId={selectedAppId} />
-				</DropboxAPIProvider>
-			</SettingsProvider>
+			{archiverControls}
 		</div>
 	);
 }
 
-initializeBlock(() => <DropboxFileArchiver />);
+initializeBlock(() => (
+	<ConfigProvider>
+		<DropboxAPIProvider>
+			<Main />
+		</DropboxAPIProvider>
+	</ConfigProvider>
+));

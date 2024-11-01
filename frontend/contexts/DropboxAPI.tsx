@@ -8,8 +8,7 @@ import React, {
 	useState,
 } from "react";
 import DropboxAPI from "../services/DropboxAPI";
-import Loading from "../components/Loading";
-import { Label } from "@airtable/blocks/ui";
+import { useConfig } from "./Config";
 
 const DROPBOX_AUTH_TABLE_ID = "tblLsaz5SX620eWOo";
 
@@ -21,7 +20,8 @@ interface ContextValue {
 
 const DropboxAPIContext = createContext<ContextValue>();
 
-export const DropboxAPIProvider: FC<Props> = ({ appId, children }) => {
+export const DropboxAPIProvider: FC<PropsWithChildren> = ({ children }) => {
+	const { appId } = useConfig();
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState(false);
 	const [dropboxAPI, setDropboxAPI] = useState<DropboxAPI | null>(null);

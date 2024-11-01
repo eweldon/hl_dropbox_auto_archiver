@@ -1,23 +1,14 @@
-import {
-	SelectOption,
-	SelectOptionValue,
-} from "@airtable/blocks/dist/types/src/ui/select_and_select_buttons_helpers";
-import { Button, Select, useBase, useRecords } from "@airtable/blocks/ui";
-import React, { FC, useCallback, useMemo, useState } from "react";
-import { OnChange } from "../types/OnChange";
+import { SelectOption } from "@airtable/blocks/dist/types/src/ui/select_and_select_buttons_helpers";
+import { Select, useBase, useRecords } from "@airtable/blocks/ui";
+import React, { FC, useMemo } from "react";
 import Record from "@airtable/blocks/dist/types/src/models/record";
+import { useConfig } from "../contexts/Config";
 
-interface Props {
-	value: SelectOptionValue;
-	onChange: OnChange<SelectOptionValue>;
-}
-
-const AppSelect: FC<Props> = ({ value, onChange }) => {
+const AppSelect: FC<Props> = () => {
 	const base = useBase();
 	const authTable = useMemo(() => base.getTable("tblLsaz5SX620eWOo"), [base]);
 	const apps = useRecords(authTable);
-
-	const [selectedAppId, setSelectedAppId] = useState<SelectOptionValue>(null);
+	const { appId, setAppId, hasChanges } = useConfig();
 
 	const options = useMemo(() => {
 		return apps.map((app): SelectOption => {
@@ -28,35 +19,15 @@ const AppSelect: FC<Props> = ({ value, onChange }) => {
 		});
 	}, [apps]);
 
-	const app = useMemo(
-		() => apps.find((app) => app.id === selectedAppId),
-		[apps, selectedAppId]
-	);
-
-	const canSubmit = selectedAppId && value !== selectedAppId;
-
-	const onSubmit = useCallback(() => {
-		onChange(selectedAppId);
-	}, [onChange, selectedAppId]);
-
-	const prefix = value ? "Switch to" : "Select";
-	const appName = app ? `"${getAppNote(app)}"` : "an app...";
-	const submitButtonText =
-		value && value === selectedAppId
-			? `${appName} selected`
-			: `${prefix} ${appName}`;
-
 	return (
 		<div className="flex row gap">
 			Select App:
 			<Select
-				value={selectedAppId}
-				onChange={setSelectedAppId}
+				disabled={hasChanges}
+				value={appId}
+				onChange={setAppId}
 				options={options}
 			/>
-			<Button disabled={!canSubmit} onClick={onSubmit}>
-				{submitButtonText}
-			</Button>
 		</div>
 	);
 };
