@@ -24,12 +24,12 @@ class DropboxAPI {
 		search: `https://api.dropboxapi.com/2/files/search_v2`,
 		searchContinue: `https://api.dropboxapi.com/2/files/search/continue_v2`,
 		listFolder: `https://api.dropboxapi.com/2/files/list_folder`,
-		listFolderContinue: `    https://api.dropboxapi.com/2/files/list_folder/continue`,
+		listFolderContinue: `https://api.dropboxapi.com/2/files/list_folder/continue`,
 		moveBatch: `https://api.dropboxapi.com/2/files/move_batch_v2`,
 		moveBatchCheck: `https://api.dropboxapi.com/2/files/move_batch/check_v2`,
 		copyBatch: `https://api.dropboxapi.com/2/files/copy_batch_v2`,
 		copyBatchCheck: `https://api.dropboxapi.com/2/files/copy_batch/check_v2`,
-	};
+	} as const;
 
 	static async fromRecord(authTableId: string, recordId: string) {
 		const table = base.getTable(authTableId);
@@ -64,7 +64,7 @@ class DropboxAPI {
 
 		if (!dropboxAPI.isAccessTokenValid) {
 			const { accessToken, expirationTimestamp } =
-				await dropboxAPI.getValidAccessToken();
+				await dropboxAPI.refreshAccessToken();
 
 			await table.updateRecordAsync(recordId, {
 				[fieldIds.accessToken]: accessToken,
