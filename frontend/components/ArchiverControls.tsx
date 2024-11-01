@@ -7,6 +7,7 @@ import Error from "./Error";
 import Accordion from "./Accordion";
 import FileTree from "./FileTree";
 import { useConfig } from "../contexts/Config";
+import ConfigMenu from "./ConfigMenu";
 
 const ArchiverControls: FC<Props> = () => {
 	const { appId, config } = useConfig();
@@ -37,28 +38,43 @@ const ArchiverControls: FC<Props> = () => {
 	const canTransfer = appId && filesFound.length > 0;
 
 	return (
+		<div className="flex row gap2 padding">
 			<div className="flex column gap justify-between align-center">
 				<Label>Archiver</Label>
 				<ConfigMenu disabled={isSearching || isTransferring} />
 			</div>
 
-			<Accordion title={<Label>Files found: {filesFound.length}</Label>}>
-				<FileTree files={filesFound} />
-			</Accordion>
+			<div className="flex row gap">
+				<Button disabled={!canSearch} onClick={search}>
+					{isSearching ? (
+						<Loading
+							text={`Searching "${config.rootPath}" for files to archive`}
+						/>
+					) : (
+						`Search "${config.rootPath}" for files to archive`
+					)}
+				</Button>
 
-			<Button disabled={!canTransfer} onClick={transfer}>
-				{isTransferring ? (
-					<Loading text={`Transferring files to "${config.archiveFolder}"`} />
-				) : (
-					`Transfer found files to "${config.archiveFolder}"`
-				)}
-			</Button>
+				<Accordion title={<Label>Files found: {filesFound.length}</Label>}>
+					<FileTree files={filesFound} />
+				</Accordion>
+			</div>
 
-			<Accordion
-				title={<Label>Files archived: {filesTransferred.length}</Label>}
-			>
-				<FileTree files={filesTransferred} />
-			</Accordion>
+			<div className="flex row gap">
+				<Button disabled={!canTransfer} onClick={transfer}>
+					{isTransferring ? (
+						<Loading text={`Transferring files to "${config.archiveFolder}"`} />
+					) : (
+						`Transfer found files to "${config.archiveFolder}"`
+					)}
+				</Button>
+
+				<Accordion
+					title={<Label>Files archived: {filesTransferred.length}</Label>}
+				>
+					<FileTree files={filesTransferred} />
+				</Accordion>
+			</div>
 		</div>
 	);
 };

@@ -46,6 +46,10 @@
 	gap: 5px;
 }
 
+.gap2 {
+	gap: 10px;
+}
+
 .padding {
 	padding: 4px 8px;
 }

@@ -1,19 +1,17 @@
-import { initializeBlock } from "@airtable/blocks/ui";
+import { Box, initializeBlock } from "@airtable/blocks/ui";
 import React, { useMemo } from "react";
 import AppSelect from "./components/AppSelect";
 import ArchiverControls from "./components/ArchiverControls";
 import { DropboxAPIProvider, useDropboxAPI } from "./contexts/DropboxAPI";
 import { ConfigProvider, useConfig } from "./contexts/Config";
-import ConfigMenu from "./components/ConfigMenu";
 import Loading from "./components/Loading";
 import Error from "./components/Error";
 import "./index.css";
-import { ArchiverProvider, useArchiver } from "./contexts/Archiver";
+import { ArchiverProvider } from "./contexts/Archiver";
 
 function Main() {
 	const { appId } = useConfig();
 	const { loading, error } = useDropboxAPI();
-	const { isSearching, isTransferring } = useArchiver();
 
 	const archiverControls = useMemo(() => {
 		if (loading) {
@@ -29,15 +27,19 @@ function Main() {
 
 	return (
 		<div className="flex row gap padding align-stretch">
-			<div className="grow flex column gap align-end">
-				<div className="grow">
-					<AppSelect />
-				</div>
+			<AppSelect />
 
-				<ConfigMenu disabled={isSearching || isTransferring} />
-			</div>
-
-			{archiverControls}
+			{archiverControls && (
+				<Box
+					border="default"
+					backgroundColor="lightGray1"
+					padding={1}
+					gap={10}
+					overflow="hidden"
+				>
+					{archiverControls}
+				</Box>
+			)}
 		</div>
 	);
 }
