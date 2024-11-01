@@ -83,8 +83,8 @@ export const ArchiverProvider: FC<PropsWithChildren> = ({ children }) => {
 
 					const pathToEntry = join(entry.path);
 					if (!pathToEntry) continue;
+					if (cleanRootPath && !pathToEntry.startsWith(cleanRootPath)) continue;
 					if (pathToEntry.startsWith(cleanArchiveFolder)) continue;
-					if (!pathToEntry.startsWith(cleanRootPath)) continue;
 
 					newFoundFiles.push(entry);
 				}
