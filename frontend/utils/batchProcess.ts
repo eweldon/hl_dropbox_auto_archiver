@@ -67,6 +67,8 @@ function batchProcess<T>(
 		for (let i = 0; i < maxConcurrentProcesses; ++i) {
 			startProcess();
 		}
+
+		onFinish();
 	});
 }
 
