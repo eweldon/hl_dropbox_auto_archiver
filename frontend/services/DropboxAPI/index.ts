@@ -77,6 +77,8 @@ class DropboxAPI {
 		return dropboxAPI;
 	}
 
+	retryInterval = 10e3;
+
 	constructor(
 		private appKey: string,
 		private appSecret: string,
@@ -179,36 +181,56 @@ class DropboxAPI {
 	): Promise<FilesResponse | null> {
 		const params = { cursor };
 
-		const response = await fetch(DropboxAPI.Endpoints.searchContinue, {
-			method: "POST",
-			headers: {
-				Authorization: `Bearer ${await this.getValidAccessToken()}`,
-				"Content-Type": "application/json",
-			},
-			body: JSON.stringify(params),
-		});
+		try {
+			const response = await fetch(DropboxAPI.Endpoints.searchContinue, {
+				method: "POST",
+				headers: {
+					Authorization: `Bearer ${await this.getValidAccessToken()}`,
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify(params),
+			});
 
-		if (response.status === 200) {
-			return (await response.json()) as FilesResponse;
-		}
+			if (response.status === 200) {
+				return (await response.json()) as FilesResponse;
+			}
 
-		if (retries > 0) {
-			console.log(
-				`[DropboxAPI] \`continueSearch\` failed with status: ${response.status}`
+			if (retries > 0) {
+				console.log(
+					`[DropboxAPI] \`continueSearch\` failed with status: ${response.status}`
+				);
+				console.log(
+					`[DropboxAPI] Retrying \`continueSearch\` in ${Math.ceil(
+						this.retryInterval / 1e3
+					)} seconds... (${retries} times left)`
+				);
+
+				await wait(this.retryInterval);
+				return this.continueSearch(cursor, retries - 1);
+			}
+
+			const errorMessage = await response.text();
+
+			throw new Error(
+				`[${response.status}: ${response.statusText}] ${errorMessage}`
 			);
-			console.log(
-				`[DropboxAPI] Retrying \`continueSearch\`... (${retries} times left)`
-			);
+		} catch (error) {
+			if (retries > 0) {
+				console.log(
+					`[DropboxAPI] \`continueListFolder\` threw an error: ${error}`
+				);
+				console.log(
+					`[DropboxAPI] Retrying \`continueSearch\` in ${Math.ceil(
+						this.retryInterval / 1e3
+					)} seconds... (${retries} times left)`
+				);
 
-			await wait(2e3);
-			return this.continueSearch(cursor, retries - 1);
+				await wait(this.retryInterval);
+				return this.continueListFolder(cursor, retries - 1);
+			}
+
+			throw error;
 		}
-
-		const errorMessage = await response.text();
-
-		throw new Error(
-			`[${response.status}: ${response.statusText}] ${errorMessage}`
-		);
 	}
 
 	async listFolderFiles({
@@ -244,36 +266,56 @@ class DropboxAPI {
 	): Promise<EntriesResponse | null> {
 		const params = { cursor };
 
-		const response = await fetch(DropboxAPI.Endpoints.listFolderContinue, {
-			method: "POST",
-			headers: {
-				Authorization: `Bearer ${await this.getValidAccessToken()}`,
-				"Content-Type": "application/json",
-			},
-			body: JSON.stringify(params),
-		});
+		try {
+			const response = await fetch(DropboxAPI.Endpoints.listFolderContinue, {
+				method: "POST",
+				headers: {
+					Authorization: `Bearer ${await this.getValidAccessToken()}`,
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify(params),
+			});
 
-		if (response.status === 200) {
-			return (await response.json()) as FilesResponse;
-		}
+			if (response.status === 200) {
+				return (await response.json()) as FilesResponse;
+			}
 
-		if (retries > 0) {
-			console.log(
-				`[DropboxAPI] \`continueListFolder\` failed with status: ${response.status}`
+			if (retries > 0) {
+				console.log(
+					`[DropboxAPI] \`continueListFolder\` failed with status: ${response.status}`
+				);
+				console.log(
+					`[DropboxAPI] Retrying \`continueListFolder\` in ${Math.ceil(
+						this.retryInterval / 1e3
+					)} seconds... (${retries} times left)`
+				);
+
+				await wait(this.retryInterval);
+				return this.continueListFolder(cursor, retries - 1);
+			}
+
+			const errorMessage = await response.text();
+
+			throw new Error(
+				`[${response.status}: ${response.statusText}] ${errorMessage}`
 			);
-			console.log(
-				`[DropboxAPI] Retrying \`continueListFolder\`... (${retries} times left)`
-			);
+		} catch (error) {
+			if (retries > 0) {
+				console.log(
+					`[DropboxAPI] \`continueListFolder\` threw an error: ${error}`
+				);
+				console.log(
+					`[DropboxAPI] Retrying \`continueListFolder\` in ${Math.ceil(
+						this.retryInterval / 1e3
+					)} seconds... (${retries} times left)`
+				);
 
-			await wait(2e3);
-			return this.continueListFolder(cursor, retries - 1);
+				await wait(this.retryInterval);
+				return this.continueListFolder(cursor, retries - 1);
+			}
+
+			throw error;
 		}
-
-		const errorMessage = await response.text();
-
-		throw new Error(
-			`[${response.status}: ${response.statusText}] ${errorMessage}`
-		);
 	}
 
 	async batchCopy(
