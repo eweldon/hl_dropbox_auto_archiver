@@ -15,6 +15,7 @@ import {
 } from "./parameters";
 import { join } from "../../utils/join";
 import { Entry } from "../../types/Entry";
+import { EntryMetadata } from "../../types/MatchEntry";
 
 const GRANT_TYPE = "refresh_token";
 
@@ -227,7 +228,7 @@ class DropboxAPI {
 		});
 
 		if (response.status === 200) {
-			return (await response.json()) as FilesResponse;
+			return (await response.json()) as EntriesResponse;
 		}
 
 		const errorMessage = await response.text();
