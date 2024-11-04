@@ -34,7 +34,7 @@ interface FolderMetadata {
 	};
 }
 
-export type MatchMetadata = FileMetadata | FolderMetadata;
+export type EntryMetadata = FileMetadata | FolderMetadata;
 
 export interface MatchEntry {
 	highlight_spans: string[];
@@ -43,6 +43,6 @@ export interface MatchEntry {
 	};
 	metadata: {
 		".tag": "metadata";
-		metadata: MatchMetadata;
+		metadata: EntryMetadata;
 	};
 }
