@@ -11,6 +11,7 @@ interface SearchOptions {
 	foldersOnly?: boolean;
 	maxFiles?: number;
 	progressCallback?: (chunk: Entry[]) => void;
+	filter?: Entry[]["filter"];
 }
 
 function useSearchAll() {
@@ -23,6 +24,7 @@ function useSearchAll() {
 			foldersOnly,
 			maxFiles,
 			progressCallback,
+			filter,
 		}: SearchOptions): Entry[] => {
 			maxFiles = Math.min(maxFiles ?? SEARCH_LIMIT, SEARCH_LIMIT);
 			if (maxFiles <= 0) maxFiles = SEARCH_LIMIT;
@@ -39,6 +41,8 @@ function useSearchAll() {
 
 			progressCallback?.(Array.from(entries));
 
+			console.log("[entries.length:]", entries.length);
+
 			while (hasMore && entries.length < maxFiles) {
 				await wait(1e3);
 				const response = await dropboxAPI.continueSearch(cursor, 3);
@@ -54,7 +58,11 @@ function useSearchAll() {
 					matches: newMatches,
 				} = response;
 
-				const newEntries = newMatches.map(matchEntryToEntry);
+				let newEntries = newMatches.map(matchEntryToEntry);
+
+				if (filter) {
+					newEntries = newEntries.filter(filter);
+				}
 
 				progressCallback?.(newEntries);
 

@@ -76,17 +76,24 @@ export const ArchiverProvider: FC<PropsWithChildren> = ({ children }) => {
 				setFilesFound(newFoundFiles.slice(0, maxFiles));
 			};
 
+			const shouldEntryBeArchived = (entry: Entry) => {
+				if (entry.type !== "file") return false;
+				if (entry.modifiedAt > beforeDate) return false;
+
+				const pathToEntry = join(entry.path);
+				if (!pathToEntry) return false;
+				if (cleanRootPath && !pathToEntry.startsWith(cleanRootPath))
+					return false;
+				if (pathToEntry.startsWith(cleanArchiveFolder)) return false;
+
+				return true;
+			};
+
 			const progressCallback = (chunk: Entry[]) => {
 				for (const entry of chunk) {
-					if (entry.type !== "file") continue;
-					if (entry.modifiedAt > beforeDate) continue;
-
-					const pathToEntry = join(entry.path);
-					if (!pathToEntry) continue;
-					if (cleanRootPath && !pathToEntry.startsWith(cleanRootPath)) continue;
-					if (pathToEntry.startsWith(cleanArchiveFolder)) continue;
-
-					newFoundFiles.push(entry);
+					if (shouldEntryBeArchived(entry)) {
+						newFoundFiles.push(entry);
+					}
 				}
 
 				updateNewFoundFiles();
@@ -112,6 +119,7 @@ export const ArchiverProvider: FC<PropsWithChildren> = ({ children }) => {
 						path: join(folder.path),
 						query: beforeQuery,
 						progressCallback,
+						filter: shouldEntryBeArchived,
 						maxFiles,
 					});
 
