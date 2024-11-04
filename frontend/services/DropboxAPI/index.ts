@@ -29,6 +29,7 @@ class DropboxAPI {
 		moveBatchCheck: `https://api.dropboxapi.com/2/files/move_batch/check_v2`,
 		copyBatch: `https://api.dropboxapi.com/2/files/copy_batch_v2`,
 		copyBatchCheck: `https://api.dropboxapi.com/2/files/copy_batch/check_v2`,
+		getMetadata: `https://api.dropboxapi.com/2/files/get_metadata`,
 	} as const;
 
 	static async fromRecord(authTableId: string, recordId: string) {
@@ -395,6 +396,29 @@ class DropboxAPI {
 
 		if (response.status === 200) {
 			return (await response.json()) as BatchTransferCheckResponse;
+		}
+
+		const errorMessage = await response.text();
+
+		throw new Error(
+			`[${response.status}: ${response.statusText}] ${errorMessage}`
+		);
+	}
+
+	async getMetadata(file: string) {
+		const params = { file };
+
+		const response = await fetch(DropboxAPI.Endpoints.getMetadata, {
+			method: "POST",
+			headers: {
+				Authorization: `Bearer ${await this.getValidAccessToken()}`,
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify(params),
+		});
+
+		if (response.status === 200) {
+			return (await response.json()) as EntryMetadata;
 		}
 
 		const errorMessage = await response.text();

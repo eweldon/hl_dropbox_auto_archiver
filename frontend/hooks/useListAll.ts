@@ -27,8 +27,9 @@ function useListAll() {
 			});
 
 			let { has_more: hasMore, cursor, entries } = initialListFolderResponse;
+			const allEntries = entries.map(listEntryToEntry);
 
-			progressCallback?.(entries);
+			progressCallback?.(entries.map(listEntryToEntry));
 
 			while (hasMore) {
 				await wait(1e3);
@@ -39,46 +40,31 @@ function useListAll() {
 					break;
 				}
 
-				const {
-					has_more: newHasMore,
-					cursor: newCursor,
-					entries: newEntries,
-				} = response;
+				const newEntries = response.entries.map(listEntryToEntry);
 
 				progressCallback?.(newEntries);
 
-				hasMore = newHasMore;
-				cursor = newCursor;
-				entries.push(...newEntries);
+				hasMore = response.has_more;
+				cursor = response.cursor;
+				allEntries.push(...newEntries);
 			}
 
-			console.log("entries:", entries);
-
-			return entries.map((entry): Entry => {
-				const { id, ".tag": type, name, path_display: path } = entry;
-
-				if (entry[".tag"] === "file") {
-					return {
-						id,
-						type,
-						name,
-						path,
-						modifiedAt: new Date(entry.server_modified),
-					};
-				}
-
-				return {
-					id,
-					type,
-					name,
-					path,
-				};
-			});
+			return allEntries;
 		},
 		[dropboxAPI]
 	);
 
 	return listFolderAll;
+}
+
+function listEntryToEntry(entry: ListEntry): Entry {
+	return {
+		id: entry.id,
+		type: entry[".tag"],
+		name: entry.name,
+		path: entry.path_display,
+		modifiedAt: entry[".tag"] === "file" && new Date(entry.client_modified),
+	};
 }
 
 export default useListAll;

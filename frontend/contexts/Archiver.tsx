@@ -54,7 +54,7 @@ export const ArchiverProvider: FC<PropsWithChildren> = ({ children }) => {
 	const [error, setError] = useState("");
 
 	const listAll = useListAll();
-	const searchAll = useSearchAll();
+	// const searchAll = useSearchAll();
 	const transferFiles = useFileTransferrer();
 
 	const search = useCallback(async () => {
@@ -89,7 +89,7 @@ export const ArchiverProvider: FC<PropsWithChildren> = ({ children }) => {
 				return true;
 			};
 
-			const progressCallback = (chunk: Entry[]) => {
+			const uploadSuitableFiles = (chunk: Entry[]) => {
 				for (const entry of chunk) {
 					if (shouldEntryBeArchived(entry)) {
 						newFoundFiles.push(entry);
@@ -110,18 +110,28 @@ export const ArchiverProvider: FC<PropsWithChildren> = ({ children }) => {
 				["rootFiles", "folderQueue"]
 			);
 
-			progressCallback(rootFiles);
+			uploadSuitableFiles(rootFiles);
 
 			await batchProcess(
 				folderQueue,
 				async (folder, stop) => {
-					await searchAll({
+					if (cleanRootPath && !folder.path.startsWith(cleanRootPath)) return;
+
+					console.log("listing folder:", folder.path);
+
+					await listAll({
 						path: join(folder.path),
-						query: beforeQuery,
-						progressCallback,
-						filter: shouldEntryBeArchived,
-						maxFiles,
+						recursive: true,
+						progressCallback: uploadSuitableFiles,
 					});
+
+					// await searchAll({
+					// 	path: join(folder.path),
+					// 	query: beforeQuery,
+					// 	progressCallback,
+					// 	filter: uploadSuitableFiles,
+					// 	maxFiles,
+					// });
 
 					if (newFoundFiles.length >= maxFiles) {
 						stop();
@@ -141,14 +151,7 @@ export const ArchiverProvider: FC<PropsWithChildren> = ({ children }) => {
 
 		isSearchingRef.current = false;
 		setIsSearching(false);
-	}, [
-		archiveFilesOlderThan,
-		archiveFolder,
-		listAll,
-		maxFiles,
-		rootPath,
-		searchAll,
-	]);
+	}, [archiveFilesOlderThan, archiveFolder, listAll, maxFiles, rootPath]);
 
 	const transfer = useCallback(async () => {
 		if (isTransferringRef.current) return;
