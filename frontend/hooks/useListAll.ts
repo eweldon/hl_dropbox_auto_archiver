@@ -2,6 +2,7 @@ import { useCallback } from "react";
 import { useDropboxAPI } from "../contexts/DropboxAPI";
 import wait from "../utils/wait";
 import { Entry } from "../types/Entry";
+import { ListEntry } from "../types/ListEntry";
 
 const FILES_LIMIT_PER_REQUEST = 2e3;
 
@@ -33,7 +34,7 @@ function useListAll() {
 
 			while (hasMore) {
 				await wait(1e3);
-				const response = await dropboxAPI.continueListFolder(cursor, 3);
+				const response = await dropboxAPI.continueListFolder(cursor, 10);
 
 				if (!response) {
 					console.warn("Weird response:", response);
