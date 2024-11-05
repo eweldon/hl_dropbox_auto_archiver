@@ -8,7 +8,6 @@ import React, {
 	useRef,
 	useState,
 } from "react";
-import useSearchAll from "../hooks/useSearchAll";
 import useFileTransferrer from "../hooks/useFileMover";
 import { join } from "../utils/join";
 import getDateString from "../utils/getDateString";
@@ -17,14 +16,16 @@ import groupArray from "../utils/groupArray";
 import { Entry } from "../types/Entry";
 import batchProcess from "../utils/batchProcess";
 import { useConfig } from "./Config";
+import { TransferMethod } from "../utils/TransferMethod";
 
 interface ArchiverContextValue {
 	search: () => void;
 	isSearching: boolean;
 	filesFound: Entry[];
 
-	transfer: () => void;
+	transfer: (method: TransferMethod) => void;
 	isTransferring: boolean;
+	transferMethod: TransferMethod;
 	filesTransferred: Entry[];
 
 	error: string;
@@ -47,6 +48,9 @@ export const ArchiverProvider: FC<PropsWithChildren> = ({ children }) => {
 	const isTransferringRef = useRef(false);
 	const [isTransferring, setIsTransferring] = useState(
 		isTransferringRef.current
+	);
+	const [transferMethod, setTransferMethod] = useState<TransferMethod | null>(
+		null
 	);
 
 	const [filesFound, setFilesFound] = useState<Entry[]>([]);
@@ -153,36 +157,41 @@ export const ArchiverProvider: FC<PropsWithChildren> = ({ children }) => {
 		setIsSearching(false);
 	}, [archiveFilesOlderThan, archiveFolder, listAll, maxFiles, rootPath]);
 
-	const transfer = useCallback(async () => {
-		if (isTransferringRef.current) return;
+	const transfer = useCallback(
+		async (method: TransferMethod) => {
+			if (isTransferringRef.current) return;
 
-		isTransferringRef.current = true;
-		setIsTransferring(true);
-		setTransferredFiles([]);
+			isTransferringRef.current = true;
+			setIsTransferring(true);
+			setTransferredFiles([]);
+			setTransferMethod(method);
 
-		const progressCallback = (chunk: Entry[]) => {
-			setTransferredFiles((prev) => [...prev, ...chunk]);
-		};
+			const progressCallback = (chunk: Entry[]) => {
+				setTransferredFiles((prev) => [...prev, ...chunk]);
+			};
 
-		try {
-			const summary = await transferFiles({
-				method: "copy",
-				entries: filesFound,
-				destination: archiveFolder,
-				autoRename,
-				progressCallback,
-				check: true,
-			});
+			try {
+				const summary = await transferFiles({
+					method,
+					entries: filesFound,
+					destination: archiveFolder,
+					autoRename,
+					progressCallback,
+					check: true,
+				});
 
-			console.log("Move Summary:", summary);
-		} catch (error: Error) {
-			console.error(error);
-			setError(error.message);
-		}
+				console.log("Move Summary:", summary);
+			} catch (error: Error) {
+				console.error(error);
+				setError(error.message);
+			}
 
-		isTransferringRef.current = false;
-		setIsTransferring(false);
-	}, [archiveFolder, autoRename, filesFound, transferFiles]);
+			isTransferringRef.current = false;
+			setIsTransferring(false);
+			setTransferMethod(null);
+		},
+		[archiveFolder, autoRename, filesFound, transferFiles]
+	);
 
 	const contextValue = useMemo(
 		() => ({
@@ -192,6 +201,7 @@ export const ArchiverProvider: FC<PropsWithChildren> = ({ children }) => {
 
 			transfer,
 			isTransferring,
+			transferMethod,
 			filesTransferred,
 
 			error,
@@ -204,6 +214,7 @@ export const ArchiverProvider: FC<PropsWithChildren> = ({ children }) => {
 			isTransferring,
 			search,
 			transfer,
+			transferMethod,
 		]
 	);
 

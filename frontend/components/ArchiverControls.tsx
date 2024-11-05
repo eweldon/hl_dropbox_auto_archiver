@@ -1,4 +1,4 @@
-import React, { FC } from "react";
+import React, { FC, useCallback, useState } from "react";
 import { useArchiver } from "../contexts/Archiver";
 import Loading from "./Loading";
 import { useDropboxAPI } from "../contexts/DropboxAPI";
@@ -8,10 +8,15 @@ import Accordion from "./Accordion";
 import FileTree from "./FileTree";
 import { useConfig } from "../contexts/Config";
 import ConfigMenu from "./ConfigMenu";
+import ConfirmationDialog from "./ConfirmationDialog";
+import { TransferMethod } from "../utils/TransferMethod";
 
 const ArchiverControls: FC<Props> = () => {
 	const { appId, config } = useConfig();
 	const { dropboxAPI } = useDropboxAPI();
+	const {
+		config: { archiveFolder },
+	} = useConfig();
 
 	const {
 		search,
@@ -20,10 +25,27 @@ const ArchiverControls: FC<Props> = () => {
 
 		transfer,
 		isTransferring,
+		transferMethod,
 		filesTransferred,
 
 		error,
 	} = useArchiver();
+
+	const [confirmationDialog, setConfirmationDialog] =
+		useState<TransferMethod | null>(null);
+
+	const onConfirm = useCallback(() => {
+		if (confirmationDialog) {
+			setConfirmationDialog(null);
+			transfer(confirmationDialog);
+		}
+	}, [confirmationDialog, transfer]);
+
+	const onCancel = useCallback(() => {
+		if (confirmationDialog) {
+			setConfirmationDialog(null);
+		}
+	}, [confirmationDialog]);
 
 	if (error) return <Error message={error} />;
 
@@ -35,7 +57,7 @@ const ArchiverControls: FC<Props> = () => {
 		);
 
 	const canSearch = appId && !isSearching;
-	const canTransfer = appId && filesFound.length > 0;
+	const canTransfer = appId && filesFound.length > 0 && !isTransferring;
 
 	return (
 		<div className="flex row gap2 padding">
@@ -61,13 +83,39 @@ const ArchiverControls: FC<Props> = () => {
 			</div>
 
 			<div className="flex row gap">
-				<Button disabled={!canTransfer} onClick={transfer}>
-					{isTransferring ? (
-						<Loading text={`Transferring files to "${config.archiveFolder}"`} />
+				<Button
+					disabled={!canTransfer}
+					onClick={() => setConfirmationDialog("copy")}
+				>
+					{isTransferring && transferMethod === "copy" ? (
+						<Loading text={`Copying files to "${config.archiveFolder}"`} />
 					) : (
-						`Transfer found files to "${config.archiveFolder}"`
+						`Copy found files to "${config.archiveFolder}"`
 					)}
 				</Button>
+
+				<Button
+					disabled={!canTransfer}
+					onClick={() => setConfirmationDialog("move")}
+				>
+					{isTransferring && transferMethod === "move" ? (
+						<Loading text={`Moving files to "${config.archiveFolder}"`} />
+					) : (
+						`Move found files to "${config.archiveFolder}"`
+					)}
+				</Button>
+
+				{confirmationDialog && (
+					<ConfirmationDialog
+						title={`${confirmationDialog === "move" ? "Move" : "Copy"} files?`}
+						onConfirm={onConfirm}
+						onCancel={onCancel}
+					>
+						{`This action will initiate a file transfer. All files listed above will
+					be ${confirmationDialog === "move" ? "moved" : "copied"} to the "
+					${archiveFolder}". Are you sure you want to do it?`}
+					</ConfirmationDialog>
+				)}
 
 				<Accordion
 					title={<Label>Files archived: {filesTransferred.length}</Label>}

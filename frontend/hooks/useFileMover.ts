@@ -3,11 +3,12 @@ import { useDropboxAPI } from "../contexts/DropboxAPI";
 import chunkArray from "../utils/chunkArray";
 import wait from "../utils/wait";
 import { Entry } from "../types/Entry";
+import { TransferMethod } from "../utils/TransferMethod";
 
 const MAX_FILES_PER_REQUEST = 1e3;
 
 interface TransferOptions<Check extends boolean> {
-	method: "move" | "copy";
+	method: TransferMethod;
 	entries: Entry[];
 	destination: string;
 	autoRename?: boolean;
