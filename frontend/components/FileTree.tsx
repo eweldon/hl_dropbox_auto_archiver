@@ -12,11 +12,18 @@ const FileTree: FC<Props> = ({ files }) => {
 			{files.length === 0 ? (
 				<Label className="item">Empty</Label>
 			) : (
-				files.map(({ path }) => (
-					<div className="flex column gap padding item" key={path}>
-						<Label className="ellipsis">{path}</Label>
-					</div>
-				))
+				files.map((entry) => {
+					const date = entry.type === "file" && new Date(entry.modifiedAt);
+
+					return (
+						<div className="flex row gap padding item" key={entry.path}>
+							<Label className="ellipsis">{entry.path}</Label>
+							<Label className="ellipsis">
+								{date ? `Modified: ${date.toLocaleString()}` : "Folder"}
+							</Label>
+						</div>
+					);
+				})
 			)}
 		</div>
 	);
