@@ -101,6 +101,8 @@ export const ArchiverProvider: FC<PropsWithChildren> = ({ children }) => {
 				}
 
 				updateNewFoundFiles();
+
+				return newFoundFiles.length > maxFiles;
 			};
 
 			const rootEntries = await listAll({
@@ -118,7 +120,7 @@ export const ArchiverProvider: FC<PropsWithChildren> = ({ children }) => {
 
 			await batchProcess(
 				folderQueue,
-				async (folder, stop) => {
+				async (folder, _, stop) => {
 					if (cleanRootPath && !folder.path.startsWith(cleanRootPath)) return;
 
 					console.log("listing folder:", folder.path);

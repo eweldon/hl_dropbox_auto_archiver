@@ -9,7 +9,7 @@ const FILES_LIMIT_PER_REQUEST = 2e3;
 interface ListFolderOptions {
 	path: string;
 	recursive?: boolean;
-	progressCallback?: (chunk: Entry[]) => void;
+	progressCallback?: (chunk: Entry[]) => boolean | undefined | void;
 }
 
 function useListAll() {
@@ -30,9 +30,9 @@ function useListAll() {
 			let { has_more: hasMore, cursor, entries } = initialListFolderResponse;
 			const allEntries = entries.map(listEntryToEntry);
 
-			progressCallback?.(entries.map(listEntryToEntry));
+			let stopListing = !!progressCallback?.(entries.map(listEntryToEntry));
 
-			while (hasMore) {
+			while (hasMore && !stopListing) {
 				await wait(1e3);
 				const response = await dropboxAPI.continueListFolder(cursor, 10);
 
@@ -43,7 +43,7 @@ function useListAll() {
 
 				const newEntries = response.entries.map(listEntryToEntry);
 
-				progressCallback?.(newEntries);
+				stopListing = progressCallback?.(newEntries);
 
 				hasMore = response.has_more;
 				cursor = response.cursor;
