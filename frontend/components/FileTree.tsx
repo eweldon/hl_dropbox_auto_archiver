@@ -17,8 +17,8 @@ const FileTree: FC<Props> = ({ files }) => {
 
 					return (
 						<div className="flex row gap padding item" key={entry.path}>
-							<Label className="ellipsis">{entry.path}</Label>
-							<Label className="ellipsis">
+							<Label className="ellipsis no-margin">{entry.path}</Label>
+							<Label className="ellipsis no-margin">
 								{date ? `Modified: ${date.toLocaleString()}` : "Folder"}
 							</Label>
 						</div>

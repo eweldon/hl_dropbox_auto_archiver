@@ -127,3 +127,7 @@
 	overflow: hidden;
 	text-overflow: ellipsis;
 }
+
+.no-margin {
+	margin: 0;
+}
