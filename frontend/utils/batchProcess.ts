@@ -7,7 +7,7 @@ function batchProcess<T>(
 	callback: ProcessCallback<T>,
 	maxConcurrentProcesses: number,
 	interval?: number
-) {
+): Promise<void> {
 	const iter = items.values();
 	let runningProcesses = 0;
 
