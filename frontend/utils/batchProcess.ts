@@ -1,6 +1,10 @@
 import wait from "./wait";
 
-type ProcessCallback<T> = (item: T, stop: () => void) => Promise<void>;
+type ProcessCallback<T> = (
+	item: T,
+	index: number,
+	stop: () => void
+) => void | Promise<void>;
 
 function batchProcess<T>(
 	items: T[],
@@ -8,7 +12,7 @@ function batchProcess<T>(
 	maxConcurrentProcesses: number,
 	interval?: number
 ): Promise<void> {
-	const iter = items.values();
+	const iter = items.entries();
 	let runningProcesses = 0;
 
 	return new Promise((resolve) => {
@@ -31,14 +35,14 @@ function batchProcess<T>(
 			if (finished) return false;
 			if (runningProcesses >= maxConcurrentProcesses) return false;
 
-			const { value, done } = iter.next() as {
-				value: T | null;
+			const { value: entry, done } = iter.next() as {
+				value: [number, T] | null;
 				done: boolean;
 			};
 
 			if (done) {
 				finished = true;
-			} else if (value) {
+			} else if (entry) {
 				const runTask = async () => {
 					if (interval && interval > 0) {
 						nextRun = Math.max(nextRun, Date.now());
@@ -48,7 +52,13 @@ function batchProcess<T>(
 						await wait(timeout);
 					}
 
-					await callback(value, stop).catch(console.error);
+					try {
+						const [index, value] = entry;
+						await callback(value, index, stop);
+					} catch (error) {
+						console.error(error);
+					}
+
 					--runningProcesses;
 					onFinish();
 
