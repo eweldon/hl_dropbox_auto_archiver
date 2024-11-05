@@ -57,7 +57,8 @@ const ArchiverControls: FC<Props> = () => {
 		);
 
 	const canSearch = appId && !isSearching;
-	const canTransfer = appId && filesFound.length > 0 && !isTransferring;
+	const canTransfer =
+		appId && filesFound.length > 0 && !isSearching && !isTransferring;
 
 	return (
 		<div className="flex row gap2 padding">
