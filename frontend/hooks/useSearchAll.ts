@@ -85,8 +85,7 @@ function matchEntryToEntry({ metadata: { metadata } }: MatchEntry): Entry {
 		type: metadata[".tag"],
 		name: metadata.name,
 		path: metadata.path_display,
-		modifiedAt:
-			metadata[".tag"] === "file" && new Date(metadata.client_modified),
+		modifiedAt: metadata[".tag"] === "file" && new Date(metadata.server_modified),
 	};
 }
 

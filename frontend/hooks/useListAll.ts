@@ -64,7 +64,7 @@ function listEntryToEntry(entry: ListEntry): Entry {
 		type: entry[".tag"],
 		name: entry.name,
 		path: entry.path_display,
-		modifiedAt: entry[".tag"] === "file" && new Date(entry.client_modified),
+		modifiedAt: entry[".tag"] === "file" && new Date(entry.server_modified),
 	};
 }
 
