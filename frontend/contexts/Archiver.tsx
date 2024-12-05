@@ -10,7 +10,6 @@ import React, {
 } from "react";
 import useFileTransferrer from "../hooks/useFileMover";
 import { join } from "../utils/join";
-import getDateString from "../utils/getDateString";
 import useListAll from "../hooks/useListAll";
 import groupArray from "../utils/groupArray";
 import { Entry } from "../types/Entry";
@@ -21,7 +20,9 @@ import { TransferMethod } from "../utils/TransferMethod";
 interface ArchiverContextValue {
 	search: () => void;
 	isSearching: boolean;
-	filesFound: Entry[];
+	filesProcessed: Entry[];
+	filesMatched: Entry[];
+	filesNotMatched: Entry[];
 
 	transfer: (method: TransferMethod) => void;
 	isTransferring: boolean;
@@ -53,7 +54,9 @@ export const ArchiverProvider: FC<PropsWithChildren> = ({ children }) => {
 		null
 	);
 
-	const [filesFound, setFilesFound] = useState<Entry[]>([]);
+	const [filesProcessed, setFilesProcessed] = useState<Entry[]>([]);
+	const [filesMatched, setFilesMatched] = useState<Entry[]>([]);
+	const [filesNotMatched, setFilesNotMatched] = useState<Entry[]>([]);
 	const [filesTransferred, setTransferredFiles] = useState<Entry[]>([]);
 	const [error, setError] = useState("");
 
@@ -66,18 +69,25 @@ export const ArchiverProvider: FC<PropsWithChildren> = ({ children }) => {
 
 		isSearchingRef.current = true;
 		setIsSearching(true);
-		setFilesFound([]);
+		setFilesProcessed([]);
+		setFilesMatched([]);
+		setFilesNotMatched([]);
 
 		try {
 			const cleanRootPath = join(rootPath);
 			const cleanArchiveFolder = join(archiveFolder);
 
 			const beforeDate = new Date(Date.now() - archiveFilesOlderThan);
-			const beforeQuery = `before:${getDateString(beforeDate)}`;
+			// const beforeQuery = `before:${getDateString(beforeDate)}`;
 
-			const newFoundFiles = [];
+			const processedFiles = [];
+			const matchedFiles = [];
+			const notMatchedFiles = [];
+
 			const updateNewFoundFiles = () => {
-				setFilesFound(newFoundFiles.slice(0, maxFiles));
+				setFilesProcessed(Array.from(processedFiles));
+				setFilesMatched(matchedFiles.slice(0, maxFiles));
+				setFilesNotMatched(Array.from(notMatchedFiles));
 			};
 
 			const shouldEntryBeArchived = (entry: Entry) => {
@@ -86,8 +96,7 @@ export const ArchiverProvider: FC<PropsWithChildren> = ({ children }) => {
 
 				const pathToEntry = join(entry.path);
 				if (!pathToEntry) return false;
-				if (cleanRootPath && !pathToEntry.startsWith(cleanRootPath))
-					return false;
+				if (cleanRootPath && !pathToEntry.startsWith(cleanRootPath)) return false;
 				if (pathToEntry.startsWith(cleanArchiveFolder)) return false;
 
 				return true;
@@ -95,14 +104,18 @@ export const ArchiverProvider: FC<PropsWithChildren> = ({ children }) => {
 
 			const uploadSuitableFiles = (chunk: Entry[]) => {
 				for (const entry of chunk) {
+					processedFiles.push(entry);
+
 					if (shouldEntryBeArchived(entry)) {
-						newFoundFiles.push(entry);
+						matchedFiles.push(entry);
+					} else {
+						notMatchedFiles.push(entry);
 					}
 				}
 
 				updateNewFoundFiles();
 
-				return newFoundFiles.length > maxFiles;
+				return matchedFiles.length > maxFiles;
 			};
 
 			const rootEntries = await listAll({
@@ -139,7 +152,7 @@ export const ArchiverProvider: FC<PropsWithChildren> = ({ children }) => {
 					// 	maxFiles,
 					// });
 
-					if (newFoundFiles.length >= maxFiles) {
+					if (matchedFiles.length >= maxFiles) {
 						stop();
 					}
 				},
@@ -175,7 +188,7 @@ export const ArchiverProvider: FC<PropsWithChildren> = ({ children }) => {
 			try {
 				const summary = await transferFiles({
 					method,
-					entries: filesFound,
+					entries: filesMatched,
 					destination: archiveFolder,
 					autoRename,
 					progressCallback,
@@ -192,14 +205,16 @@ export const ArchiverProvider: FC<PropsWithChildren> = ({ children }) => {
 			setIsTransferring(false);
 			setTransferMethod(null);
 		},
-		[archiveFolder, autoRename, filesFound, transferFiles]
+		[archiveFolder, autoRename, filesMatched, transferFiles]
 	);
 
 	const contextValue = useMemo(
 		() => ({
 			search,
 			isSearching,
-			filesFound,
+			filesProcessed,
+			filesMatched,
+			filesNotMatched,
 
 			transfer,
 			isTransferring,
@@ -210,7 +225,9 @@ export const ArchiverProvider: FC<PropsWithChildren> = ({ children }) => {
 		}),
 		[
 			error,
-			filesFound,
+			filesProcessed,
+			filesMatched,
+			filesNotMatched,
 			filesTransferred,
 			isSearching,
 			isTransferring,
