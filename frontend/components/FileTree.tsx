@@ -13,7 +13,7 @@ const FileTree: FC<Props> = ({ files }) => {
 				<Label className="item">Empty</Label>
 			) : (
 				files.map((entry) => {
-					const date = entry.type === "file" && new Date(entry.modifiedAt);
+					const date = entry.type === "file" && entry.modifiedAt;
 
 					return (
 						<div className="flex row gap padding item" key={entry.path}>

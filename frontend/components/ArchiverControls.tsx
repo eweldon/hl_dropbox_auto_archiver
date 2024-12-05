@@ -46,35 +46,33 @@ const ArchiverControls: FC<Props> = () => {
 		)
 		: (showNotMatched
 			? filesNotMatched
-			: []
+			: EMPTY
 		)
 
 	const filteredFiles = useMemo(() => {
-		if (!filterQuery.trim()) {
-			return displayingFiles
+		const words = !filterQuery.trim()
+			? []
+			: filterQuery
+				.toLowerCase()
+				.split(' ')
+				.filter(Boolean)
+
+		if (words.length === 0) {
+			return showFolders
+				? displayingFiles
+				: displayingFiles.filter(entry => entry.type === 'file')
 		}
-
-		const words = filterQuery
-			.toLowerCase()
-			.split(' ')
-			.filter(Boolean)
-
-		const filteredFiles = (showFolders
-			? displayingFiles
-			: displayingFiles.filter(entry => entry.type === 'file')
-		)
-			.map(entry => {
-				const score = words.reduce((score, word) => {
-					return entry.path.toLowerCase().includes(word) ? score + 1 : score
-				}, 0)
-
-				return { score, entry }
-			})
-			.filter(entry => entry.score > 0)
 
 		const groups = new Map<number, Entry[]>()
 
-		for (const { score, entry } of filteredFiles) {
+		for (const entry of displayingFiles) {
+			const score = words.reduce((score, word) => {
+				return entry.path.toLowerCase().includes(word) ? score + 1 : score
+			}, 0)
+
+			if (score === 0)
+				continue
+
 			const group = groups.get(score)
 
 			if (group)
@@ -83,11 +81,16 @@ const ArchiverControls: FC<Props> = () => {
 				groups.set(score, [entry])
 		}
 
-		return Array
-			.from(groups.entries())
+		const entries: Entry[] = []
+
+		Array.from(groups.entries())
 			.sort((a, b) => b[0] - a[0])
-			.map(([, entry]) => entry)
-			.flat(1)
+			.forEach(entry => {
+				if (Array.isArray(entry[1]))
+					entries.push(...entry[1])
+			})
+
+		return entries
 	}, [filterQuery, showFolders, displayingFiles])
 
 	const onConfirm = useCallback(() => {
@@ -202,5 +205,7 @@ const ArchiverControls: FC<Props> = () => {
 		</div>
 	);
 };
+
+const EMPTY: Entry[] = []
 
 export default ArchiverControls;
