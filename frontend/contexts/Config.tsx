@@ -23,6 +23,14 @@ const defaultConfig: Config = {
 	maxFiles: 100,
 };
 
+function getAppId() {
+	return globalConfig.get(["appid"]) as string | null
+}
+
+function saveAppId(appId: string) {
+	return globalConfig.setAsync(["appid"], appId);
+}
+
 function getConfig(appId: string) {
 	return globalConfig.get(["archiverConfigs", appId]) as Config;
 }
@@ -32,10 +40,12 @@ function saveConfig(appId: string, newConfig: Config) {
 }
 
 export const ConfigProvider: FC<PropsWithChildren> = ({ children }) => {
-	const [appId, setAppId] = useState<string | null>(null);
+	const [appId, setAppId] = useState<string | null>(getAppId);
 	const [config, setConfig] = useState(defaultConfig);
 
 	useEffect(() => {
+		saveAppId(appId)
+
 		if (!appId) return;
 
 		const savedConfig = getConfig(appId);
